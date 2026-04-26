@@ -1,0 +1,23 @@
+version: '3.9'
+
+services:
+
+  backend:
+    build:
+      context: ./backend/Docker-learn-node-app-
+      dockerfile: Dockerfile.prod     # lean multi-stage Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+    # No volumes in prod — image contains everything it needs
+
+  frontend:
+    build:
+      context: ./frontend/Docker-learn-react-app-
+      dockerfile: Dockerfile.prod     # nginx multi-stage Dockerfile
+    ports:
+      - "80:80"                       # serve on port 80 in prod
+    environment:
+      VITE_API_URL: http://localhost:3000
+    # No volumes in prod

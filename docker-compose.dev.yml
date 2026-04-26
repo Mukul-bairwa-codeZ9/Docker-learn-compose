@@ -1,0 +1,32 @@
+version: '3.9'
+
+services:
+
+  db:
+    ports:
+      - "27017:27017"       # expose so MongoDB Compass can connect locally
+
+  backend:
+    build:
+      context: ./backend/Docker-learn-node-app-
+      dockerfile: Dockerfile          # your existing dev Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: development
+    volumes:
+      - ./backend/Docker-learn-node-app-/src:/app/src   # live code sync
+      - /app/node_modules                                # keep container's node_modules intact
+    command: npm run dev              # nodemon hot reload
+
+  frontend:
+    build:
+      context: ./frontend/Docker-learn-react-app-
+      dockerfile: Dockerfile          # your existing dev Dockerfile
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_URL: http://localhost:3000
+    volumes:
+      - ./frontend/Docker-learn-react-app-/src:/app/src  # Vite hot reload
+      - /app/node_modules                                 # keep container's node_modules intact
