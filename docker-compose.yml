@@ -1,0 +1,51 @@
+version: '3.9'
+
+services:
+
+  db:
+    image: mongo:7
+    container_name: mongo_db
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+
+  backend:
+    build:
+      context: ./backend       # points to your cloned backend repo folder
+      dockerfile: Dockerfile
+    container_name: node_api
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      MONGO_URI: ${MONGO_URI}
+    depends_on:
+      - db
+    volumes:
+      - ./backend/src:/app/src  # live sync from backend repo's src/
+    command: npm run dev
+
+  frontend:
+    build:
+      context: ./frontend       # points to your cloned frontend repo folder
+      dockerfile: Dockerfile
+    container_name: react_app
+    restart: unless-stopped
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_URL: http://localhost:3000
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend/src:/app/src # live sync from frontend repo's src/
+
+volumes:
+  mongo_data:
