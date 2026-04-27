@@ -1,23 +1,41 @@
+# docker-compose.prod.yml — updated to pull from registry
+
 version: '3.9'
 
 services:
 
+  db:
+    image: mongo:7
+    container_name: mongo_db
+    restart: unless-stopped
+    volumes:
+      - mongo_data:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+
   backend:
-    build:
-      context: ./backend/Docker-learn-node-app-
-      dockerfile: Dockerfile.prod     # lean multi-stage Dockerfile
+    # Pull the image CI just built — no local build needed on the server
+    image: ${DOCKER_USERNAME}/docker-learn-backend:latest
+    container_name: node_api
+    restart: unless-stopped
     ports:
       - "3000:3000"
     environment:
       NODE_ENV: production
-    # No volumes in prod — image contains everything it needs
+      PORT: 3000
+      MONGO_URI: ${MONGO_URI}
+    depends_on:
+      - db
 
   frontend:
-    build:
-      context: ./frontend/Docker-learn-react-app-
-      dockerfile: Dockerfile.prod     # nginx multi-stage Dockerfile
+    image: ${DOCKER_USERNAME}/docker-learn-frontend:latest
+    container_name: react_app
+    restart: unless-stopped
     ports:
-      - "80:80"                       # serve on port 80 in prod
-    environment:
-      VITE_API_URL: http://localhost:3000
-    # No volumes in prod
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  mongo_data:
